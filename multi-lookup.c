@@ -163,4 +163,4 @@ int resolve(FILE* file){
 		fwrite(ipstring, sizeof(ipstring[0]), l, file);
 		fwrite("\n", sizeof(char), 1, file);
 	}
-}
+};
