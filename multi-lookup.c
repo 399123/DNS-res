@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <semaphore.h>
 
 #include "util.h"
 #include "lookup.c"
@@ -12,6 +13,10 @@
 #define SBUFSIZE 1025
 #define INPUTFS "%1024s"
 
+pthread_mutex_t queue_lock;
+sem_t order, access;
+sem_init(&order, 0, 1);
+sem_init(&access, 0, 1);
 
 int main(int argc, char* argv[]){
 
@@ -73,7 +78,6 @@ int main(int argc, char* argv[]){
 	pthread_t res8;
 	pthread_t res9;
 	pthread_t res0;
-	pthread_mutex_t queue_lock;
 	pthread_create(req0, NULL, extract(), argv[0]);
 	pthread_create(req1, NULL, extract(), argv[1]);
 	if(3 != argc){
@@ -100,19 +104,45 @@ int main(int argc, char* argv[]){
 	if(argc != 8 && argc > 8){
 		pthread_create(req8, NULL, extract(), argv[8])
 	}
+	pthread_create(req0, NULL, extract(), argv[argc-1]);
+	pthread_create(req1, NULL, extract(), argv[argc-1]);
+	pthread_create(req2, NULL, extract(), argv[argc-1]);
+	pthread_create(req3, NULL, extract(), argv[argc-1]);
+	pthread_create(req4, NULL, extract(), argv[argc-1]);
+	pthread_create(req5, NULL, extract(), argv[argc-1]);
+	pthread_create(req6, NULL, extract(), argv[argc-1]);
+	pthread_create(req7, NULL, extract(), argv[argc-1]);
+	pthread_create(req8, NULL, extract(), argv[argc-1]);
+	pthread_create(req9, NULL, extract(), argv[argc-1]);
 }
 
 
 void extract(const FILE* file){
 	char* line[1025];
 	int linenumber = 0;
+	int* use = 0;
+	int haveorder = 0;
 	while(fgets(line, sizeof(line), file) != NULL){
 		//if queue is full, sleep for random number mod 100 converted to microseconds
 		//else aquire queue push character arrays into the queue
-		if(queue_full(lookup)){
-			sleep((rand() % 100)/1000000);
-		}else{
-		queue_push(lookup, line)
+			while(*use != 1){
+				sem_getvalue(&order, use)
+				if(*use && haveorder == 0){
+					sem_wait(&order);
+					++haveorder;
+				}
+				sem_getvalue(&access, use);
+				if(*use && haveorder == 1){
+					while(queue_full(lookup)){
+						sleep(rand()%100/1000000);
+					}
+					sem_wait(&access);
+					sem_post(&order);
+					queue_push(lookup, line);
+					sem_post(&access);
+					--haveorder;
+				}
+			}
 		}
 	}
 	fclose(file);
@@ -123,9 +153,14 @@ int resolve(FILE* file){
 	char* ipstring;
 	while(!queue_empty(lookup)){
 		hostname = queue_pop(lookup);
-		&hostname[sizeof(&hostname)/sizeof(&hostname[0])] = ',';
-		&hostname[sizeof(&hostname)/sizeof(&hostname[0])] = ' ';
-		dnslookup(hostname, ipstring, 1025)
-		fwrite(ipstring, sizeof(&ipstring[0]), sizeof(ipstring)/sizeof(&ipstring[0]), file);
+		int n = strlen (hostname);
+		hostname[n] = ',';
+		hostname[++n] = ' ';
+		hostname[++n] = '\n';
+		dnslookup(hostname, ipstring, 1025);
+		int l = strlen(ipstring);
+		fwrite(hostname, sizeof(hostname[0]), n, file);
+		fwrite(ipstring, sizeof(ipstring[0]), l, file);
+		fwrite("\n", sizeof(char), 1, file);
 	}
 }
