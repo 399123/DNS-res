@@ -16,6 +16,7 @@
 #include <errno.h>
 
 #include "util.h"
+#include "util.c"
 
 #define MINARGS 3
 #define USAGE "<inputFilePath> <outputFilePath>"

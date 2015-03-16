@@ -1,2 +1,2 @@
-void extract(const FILE* file);
-int resolve(FILE* resfile);
+void* extract(void* file);
+void* resolve(void* resfile);
