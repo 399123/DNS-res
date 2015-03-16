@@ -16,7 +16,6 @@
 #include <errno.h>
 
 #include "util.h"
-#include "util.c"
 
 #define MINARGS 3
 #define USAGE "<inputFilePath> <outputFilePath>"
@@ -61,7 +60,7 @@ int main(int argc, char* argv[]){
 	/* Read File and Process*/
 	while(fscanf(inputfp, INPUTFS, hostname) > 0){
 	
-	    /* Lookup hostname and get IP string */
+	    /* Lookup hostname and get IP string*/ 
 	    if(dnslookup(hostname, firstipstr, sizeof(firstipstr))
 	       == UTIL_FAILURE){
 		fprintf(stderr, "dnslookup error: %s\n", hostname);

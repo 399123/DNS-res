@@ -6,7 +6,6 @@
 #include <pthread.h>
 
 #include "util.h"
-#include "lookup.c"
 #include "queue.c"
 
 #define MINARGS 3
