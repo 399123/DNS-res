@@ -55,7 +55,7 @@ int main(int argc, char* argv[]){
 	    sprintf(errorstr, "Error Opening Input File: %s", argv[i]);
 	    perror(errorstr);
 	    break;
-	}	
+	}
 
 	/* Read File and Process*/
 	while(fscanf(inputfp, INPUTFS, hostname) > 0){
